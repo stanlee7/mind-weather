@@ -1,89 +1,53 @@
-'use client';
+import Header from '@/components/Header';
+import Hero from '@/components/Hero';
+import HowItWorks from '@/components/HowItWorks';
+import WeeklyOutlook from '@/components/WeeklyOutlook';
+import SelfCare from '@/components/SelfCare';
+import Footer from '@/components/Footer';
+import { createClient } from '@/utils/supabase/server';
 
-import { useState } from 'react';
-import { Sparkles, CloudRain, Sun, CloudFog, Zap, ArrowRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import DiaryInput from '@/components/DiaryInput';
-import MindWeatherCard from '@/components/MindWeatherCard';
-
-export default function Home() {
-  const [viewState, setViewState] = useState<'landing' | 'writing' | 'result'>('landing');
-  const [analysisResult, setAnalysisResult] = useState<any>(null);
-  const [diaryContent, setDiaryContent] = useState<string>('');
+export default async function Home() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <main className="min-h-screen bg-[#0f0c29] overflow-x-hidden selection:bg-violet-500/30 selection:text-white">
+      <Header user={user} />
+      <Hero />
+      <HowItWorks />
+      <WeeklyOutlook />
+      <SelfCare />
 
-      <AnimatePresence mode="wait">
+      {/* Call to Action Section */}
+      {/* Call to Action Section */}
+      <section className="py-32 px-6 text-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-violet-900/20 pointer-events-none" />
+        <div className="max-w-4xl mx-auto relative z-10 p-12 rounded-[3rem] bg-white/5 border border-white/10 backdrop-blur-xl">
+          <h2 className="text-2xl md:text-4xl font-serif font-bold text-white mb-6 whitespace-nowrap">당신의 마음 날씨, 함께 나누세요</h2>
+          <p className="text-gray-300 text-lg mb-10 leading-relaxed">
+            비밀스러운 고민부터 소소한 일상까지,<br className="hidden sm:block" />
+            익명으로 편안하게 이야기할 수 있는 공간이 열려있습니다.
+          </p>
 
-        {/* LANDING VIEW */}
-        {viewState === 'landing' && (
-          <motion.div
-            key="landing"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="text-center z-10 max-w-2xl"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card text-violet-200 text-sm font-medium mb-8 animate-float">
-              <Sparkles className="w-4 h-4 text-yellow-300" />
-              <span>AI 감정 날씨 분석</span>
-            </div>
-
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-violet-200 to-indigo-200 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-              오늘 당신의 마음은<br />어떤 날씨인가요?
-            </h1>
-
-            <p className="text-lg text-gray-400 mb-12 leading-relaxed">
-              복잡한 마음을 글로 적어보세요.<br />
-              AI가 당신의 감정을 분석해 날씨로 보여드립니다.
-            </p>
-
-            <button
-              onClick={() => setViewState('writing')}
-              className="group relative px-8 py-4 bg-white text-black rounded-full font-bold text-lg hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all overflow-hidden"
+          <div className="flex justify-center">
+            <a
+              href="https://open.kakao.com/o/g6I89ddi"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-10 py-5 bg-[#F7E600] hover:bg-[#EAC900] text-[#3A1D1D] font-bold rounded-xl transition-all shadow-lg shadow-yellow-400/20 flex items-center gap-2 hover:scale-105"
             >
-              <span className="relative z-10 flex items-center gap-2">
-                시작하기 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-violet-200 to-white opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
+              <span className="text-xl">💬</span>
+              오픈카톡 커뮤니티 참여하기
+            </a>
+          </div>
 
-            {/* Floating Icons Background Elements */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] -z-10 pointer-events-none">
-              <Sun className="absolute top-0 right-20 w-12 h-12 text-yellow-500/20 animate-pulse-slow" />
-              <CloudRain className="absolute bottom-20 left-20 w-16 h-16 text-blue-400/20 animate-float" style={{ animationDelay: '1s' }} />
-              <Zap className="absolute top-40 left-10 w-8 h-8 text-yellow-500/10 animate-pulse" />
-            </div>
-          </motion.div>
-        )}
+          <div className="absolute top-10 right-10 opacity-20 animate-float">
+            <div className="w-24 h-12 bg-gray-400 rounded-full blur-xl" />
+          </div>
+        </div>
+      </section>
 
-        {/* WRITING VIEW */}
-        {viewState === 'writing' && (
-          <DiaryInput
-            onBack={() => setViewState('landing')}
-            onAnalyze={(result, content) => {
-              setAnalysisResult(result);
-              setDiaryContent(content);
-              setViewState('result');
-            }}
-          />
-        )}
-
-        {/* RESULT VIEW */}
-        {viewState === 'result' && analysisResult && (
-          <MindWeatherCard
-            result={analysisResult}
-            content={diaryContent}
-            onReset={() => {
-              setAnalysisResult(null);
-              setDiaryContent('');
-              setViewState('landing');
-            }}
-          />
-        )}
-      </AnimatePresence>
+      <Footer />
     </main>
   );
 }

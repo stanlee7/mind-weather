@@ -1,48 +1,42 @@
--- Option 1: If you want to RESET everything (Delete old data)
--- DROP TABLE IF EXISTS public.diaries;
+-- 1. Check if table exists (optional, or just alter)
+-- We will assume starting fresh or altering. Here is a safe migration script.
 
--- Option 2: Update existing table (Safe)
--- Run this if the table already exists but might be missing columns
+-- Add user_id column if it doesn't exist
+do $$ 
+begin 
+    if not exists (select 1 from information_schema.columns where table_name = 'diaries' and column_name = 'user_id') then
+        alter table public.diaries add column user_id uuid references auth.users(id) on delete cascade;
+    end if;
+end $$;
 
-DO $$
-BEGIN
-    -- Add 'weather' column if it doesn't exist
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'diaries' AND column_name = 'weather') THEN
-        ALTER TABLE public.diaries ADD COLUMN weather text NOT NULL DEFAULT 'sunny';
-    END IF;
+-- Enable RLS
+alter table public.diaries enable row level security;
 
-    -- Add 'emotion' column
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'diaries' AND column_name = 'emotion') THEN
-        ALTER TABLE public.diaries ADD COLUMN emotion text NOT NULL DEFAULT 'Normal';
-    END IF;
+-- Drop insecure policies if they exist
+drop policy if exists "Anyone can view diaries" on public.diaries;
+drop policy if exists "Anyone can insert diaries" on public.diaries;
 
-    -- Add 'summary' column
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'diaries' AND column_name = 'summary') THEN
-        ALTER TABLE public.diaries ADD COLUMN summary text NOT NULL DEFAULT '';
-    END IF;
+-- Create secure policies
+-- View: Only owner can view their own diaries
+create policy "Users can view own diaries"
+on public.diaries
+for select
+using (auth.uid() = user_id);
 
-    -- Add 'keywords' column
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'diaries' AND column_name = 'keywords') THEN
-        ALTER TABLE public.diaries ADD COLUMN keywords text[] NULL;
-    END IF;
+-- Insert: Users can insert their own diaries
+create policy "Users can insert own diaries"
+on public.diaries
+for insert
+with check (auth.uid() = user_id);
 
-    -- Add 'score' column
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'diaries' AND column_name = 'score') THEN
-        ALTER TABLE public.diaries ADD COLUMN score integer NULL;
-    END IF;
-    
-    -- Add 'content' column if missing
-     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'diaries' AND column_name = 'content') THEN
-        ALTER TABLE public.diaries ADD COLUMN content text NOT NULL DEFAULT '';
-    END IF;
-END $$;
+-- Update: Only owner can update
+create policy "Users can update own diaries"
+on public.diaries
+for update
+using (auth.uid() = user_id);
 
--- Ensure RLS is enabled
-ALTER TABLE public.diaries ENABLE ROW LEVEL SECURITY;
-
--- Re-create policies (Drop first to avoid errors)
-DROP POLICY IF EXISTS "Anyone can view diaries" ON public.diaries;
-CREATE POLICY "Anyone can view diaries" ON public.diaries FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Anyone can insert diaries" ON public.diaries;
-CREATE POLICY "Anyone can insert diaries" ON public.diaries FOR INSERT WITH CHECK (true);
+-- Delete: Only owner can delete
+create policy "Users can delete own diaries"
+on public.diaries
+for delete
+using (auth.uid() = user_id);
