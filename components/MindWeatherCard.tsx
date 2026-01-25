@@ -11,6 +11,7 @@ interface MindWeatherCardProps {
         emotion: string;
         summary: string;
         keywords: string[];
+        advice: string[];
         score: number;
     };
     content?: string;
