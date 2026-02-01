@@ -31,11 +31,12 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Mind Weather - 당신의 마음 날씨",
-  description: "AI가 당신의 일기를 분석해 마음의 날씨를 알려줍니다.",
+  title: "마음 날씨 - AI 감정 분석 일기장",
+  description: "오늘 하루 기분을 기록하면 AI가 위로와 분석을 해줍니다.",
+  keywords: ["AI 일기", "심리 분석", "마음 날씨", "무료 일기장"],
   openGraph: {
-    title: "Mind Weather - 당신의 마음 날씨",
-    description: "AI가 당신의 일기를 분석해 마음의 날씨를 알려줍니다.",
+    title: "마음 날씨 - AI 감정 분석 일기장",
+    description: "오늘 하루 기분을 기록하면 AI가 위로와 분석을 해줍니다.",
     url: "https://mind-weather-lovat.vercel.app/",
     siteName: "Mind Weather",
     images: [
@@ -51,8 +52,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Mind Weather - 당신의 마음 날씨",
-    description: "AI가 당신의 일기를 분석해 마음의 날씨를 알려줍니다.",
+    title: "마음 날씨 - AI 감정 분석 일기장",
+    description: "오늘 하루 기분을 기록하면 AI가 위로와 분석을 해줍니다.",
     images: ["/thumbnail.png"],
   },
   verification: {
