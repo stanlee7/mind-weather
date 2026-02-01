@@ -33,6 +33,28 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "Mind Weather - 당신의 마음 날씨",
   description: "AI가 당신의 일기를 분석해 마음의 날씨를 알려줍니다.",
+  openGraph: {
+    title: "Mind Weather - 당신의 마음 날씨",
+    description: "AI가 당신의 일기를 분석해 마음의 날씨를 알려줍니다.",
+    url: "https://mind-weather-lovat.vercel.app/",
+    siteName: "Mind Weather",
+    images: [
+      {
+        url: "/thumbnail.png",
+        width: 1200,
+        height: 630,
+        alt: "Mind Weather Service Preview",
+      },
+    ],
+    locale: "ko_KR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Mind Weather - 당신의 마음 날씨",
+    description: "AI가 당신의 일기를 분석해 마음의 날씨를 알려줍니다.",
+    images: ["/thumbnail.png"],
+  },
   verification: {
     google: "sYR3FYlvLZIlFQR_hCuru7lYOUZgv4GZ9H7aYDTiZc8",
   },
