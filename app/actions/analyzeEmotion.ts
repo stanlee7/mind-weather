@@ -15,6 +15,13 @@ export interface AnalysisResult {
 }
 
 export async function analyzeEmotion(text: string, imageUrl?: string): Promise<AnalysisResult | { error: string }> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { error: '로그인이 필요한 서비스입니다.' };
+    }
+
     const apiKey = process.env.GROQ_API_KEY;
 
     if (!apiKey) {
@@ -74,27 +81,22 @@ export async function analyzeEmotion(text: string, imageUrl?: string): Promise<A
         const content = completion.choices[0]?.message?.content || '{}';
         const analysis = JSON.parse(content) as AnalysisResult;
 
-        // Save to Supabase (appending advice to summary for now to persist without schema change)
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        // Save to Supabase (User is guaranteed to exist here)
+        const { data: insertedData, error } = await supabase.from('diaries').insert({
+            user_id: user.id,
+            content: text,
+            image_url: imageUrl || null,
+            weather: analysis.weather,
+            emotion: analysis.emotion,
+            summary: `${analysis.summary}\n\n💡 AI 추천: ${analysis.advice?.join(', ') || ''}`,
+            keywords: analysis.keywords,
+            score: analysis.score
+        }).select().single();
 
-        if (user) {
-            const { data: insertedData, error } = await supabase.from('diaries').insert({
-                user_id: user.id,
-                content: text,
-                image_url: imageUrl || null, // Create new column image_url
-                weather: analysis.weather,
-                emotion: analysis.emotion,
-                summary: `${analysis.summary}\n\n💡 AI 추천: ${analysis.advice?.join(', ') || ''}`,
-                keywords: analysis.keywords,
-                score: analysis.score
-            }).select().single();
-
-            if (!error && insertedData) {
-                analysis.savedId = insertedData.id;
-            } else {
-                console.error('Failed to save diary:', error);
-            }
+        if (!error && insertedData) {
+            analysis.savedId = insertedData.id;
+        } else {
+            console.error('Failed to save diary:', error);
         }
 
         return analysis;

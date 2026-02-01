@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/server';
 import MindWeatherCard from '@/components/MindWeatherCard';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -13,6 +13,7 @@ type Props = {
 // Generate Metadata for better sharing (SEO)
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params;
+    const supabase = await createClient(); // Use server client
     const { data: diary } = await supabase
         .from('diaries')
         .select('*')
@@ -31,6 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SharePage({ params }: Props) {
     const { id } = await params;
+    const supabase = await createClient(); // Use server client
 
     const { data: diary, error } = await supabase
         .from('diaries')

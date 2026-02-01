@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { CloudRain, Sun, CloudFog, Zap, RotateCcw, Share2, Quote, Check, Link as LinkIcon, Loader2 } from 'lucide-react';
-import { saveDiary } from '@/app/actions/saveDiary';
+import { CloudRain, Sun, CloudFog, Zap, RotateCcw, Share2, Quote, Check, Link as LinkIcon } from 'lucide-react';
 
 interface MindWeatherCardProps {
     result: {
@@ -13,6 +12,7 @@ interface MindWeatherCardProps {
         keywords: string[];
         advice: string[];
         score: number;
+        savedId?: string;
     };
     content?: string;
     isShared?: boolean;
@@ -54,29 +54,21 @@ export default function MindWeatherCard({ result, content, isShared = false, onR
     const config = weatherConfig[result.weather] || weatherConfig.sunny;
     const WeatherIcon = config.icon;
 
-    const [isSaving, setIsSaving] = useState(false);
+    // State for share URL
+
     const [shareUrl, setShareUrl] = useState<string | null>(null);
 
     const handleShare = async () => {
         if (!content) return;
-        setIsSaving(true);
 
-        try {
-            const { success, id, error } = await saveDiary(content, result);
-
-            if (success && id) {
-                const url = `${window.location.origin}/share/${id}`;
-                setShareUrl(url);
-                navigator.clipboard.writeText(url);
-                alert('공유 링크가 클립보드에 복사되었습니다!');
-            } else {
-                alert('저장에 실패했습니다: ' + error);
-            }
-        } catch (e) {
-            console.error(e);
-            alert('오류가 발생했습니다.');
-        } finally {
-            setIsSaving(false);
+        if (result.savedId) {
+            const url = `${window.location.origin}/share/${result.savedId}`;
+            setShareUrl(url);
+            navigator.clipboard.writeText(url);
+            alert('공유 링크가 클립보드에 복사되었습니다!');
+        } else {
+            // Should not happen if analyzeEmotion requires login, but for safety:
+            alert('저장된 데이터가 없습니다. 다시 분석해주세요.');
         }
     };
 
@@ -146,14 +138,9 @@ export default function MindWeatherCard({ result, content, isShared = false, onR
                             ) : (
                                 <button
                                     onClick={handleShare}
-                                    disabled={isSaving}
-                                    className="flex-1 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-medium transition-colors flex items-center justify-center gap-2 shadow-lg shadow-violet-600/30 disabled:opacity-50"
+                                    className="flex-1 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-medium transition-colors flex items-center justify-center gap-2 shadow-lg shadow-violet-600/30"
                                 >
-                                    {isSaving ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                        <Share2 className="w-4 h-4" />
-                                    )}
+                                    <Share2 className="w-4 h-4" />
                                     공유하기
                                 </button>
                             )}

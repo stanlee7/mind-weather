@@ -33,6 +33,9 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "Mind Weather - 당신의 마음 날씨",
   description: "AI가 당신의 일기를 분석해 마음의 날씨를 알려줍니다.",
+  verification: {
+    google: "sYR3FYlvLZIlFQR_hCuru7lYOUZgv4GZ9H7aYDTiZc8",
+  },
 };
 
 export default function RootLayout({
