@@ -52,10 +52,10 @@ export default function Header({ user }: HeaderProps) {
 
                 {/* Desktop Nav */}
                 <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
-                    {['내 다이어리', '트렌드'].map((item) => (
+                    {['내 다이어리', '트렌드', '블로그'].map((item) => (
                         <Link
                             key={item}
-                            href={item === '내 다이어리' ? '/dashboard' : '#'}
+                            href={item === '내 다이어리' ? '/dashboard' : item === '블로그' ? '/blog' : '#'}
                             className="hover:text-white transition-colors relative group"
                         >
                             {item}
@@ -120,12 +120,13 @@ export default function Header({ user }: HeaderProps) {
                         exit={{ opacity: 0, y: -20 }}
                         className="absolute top-24 left-6 right-6 p-6 rounded-3xl bg-[#0f0c29]/95 backdrop-blur-xl border border-white/10 md:hidden flex flex-col gap-4 text-center z-50"
                     >
-                        {['내 다이어리', '트렌드'].map((item) => (
+                        {['내 다이어리', '트렌드', '블로그'].map((item) => (
                             <Link
                                 key={item}
-                                href={item === '내 다이어리' ? '/dashboard' : '#'}
+                                href={item === '내 다이어리' ? '/dashboard' : item === '블로그' ? '/blog' : '#'}
                                 className="text-gray-300 hover:text-white py-2 block"
                             >
+
                                 {item}
                             </Link>
                         ))}
