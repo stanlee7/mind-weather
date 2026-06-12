@@ -10,8 +10,8 @@ collectors/  트렌드 수집 (네이버 데이터랩, 추후 다른 소스 추�
 matcher/     도매매(도매꾹 OpenAPI) 상품 검색·매칭
 scorer/      상품 스코어링 (마진, 경쟁도, 트렌드 강도 등)
 uploader/    네이버 커머스API 스마트스토어 상품 등록
-common/      공용 유틸 (HTTP 재시도/요율제한, JSON 저장)
-data/        수집·중간 결과 JSON (git 추적 안 함)
+common/      공용 유틸 (HTTP 재시도/요율제한, JSON 저장, SQLite)
+data/        수집·중간 결과 JSON + trend.db (git 추적 안 함)
 ```
 
 각 모듈은 독립적으로 `python -m <module>.<script>` 로 실행 가능해야 하고,
@@ -27,10 +27,17 @@ common/ 외에는 만들지 않는다.
 - 키 로딩은 `python-dotenv`의 `load_dotenv()` 사용.
 
 ### 데이터 저장
-- 모든 수집 결과는 일단 로컬 JSON으로 저장한다 (`data/<모듈>/<이름>_<날짜>.json`).
-  Supabase 연동은 나중 단계 — 지금은 스키마만 JSON 구조로 안정화한다.
-- JSON 저장은 `common/storage.py`의 `save_json()` 사용
+- 모듈 간 입출력(그날의 실행 결과)은 로컬 JSON (`data/<모듈>/<이름>_<날짜>.json`).
+  JSON 저장은 `common/storage.py`의 `save_json()` 사용
   (UTF-8, `ensure_ascii=False`, 디렉토리 자동 생성).
+- 누적 이력·중복 방지(시계열 추적, "이미 등록한 상품인가" 판정)는
+  SQLite (`data/trend.db`). 연결은 `common/db.py`의 `get_conn()` 사용 —
+  스키마는 `common/db.py`의 `SCHEMA`에 `CREATE TABLE IF NOT EXISTS`로만 추가한다
+  (별도 마이그레이션 도구 없음, 컬럼 변경 시 DB 파일 삭제 후 재수집).
+- 외부 호스팅 백엔드(Supabase 등)는 쓰지 않는다. 단일 사용자 로컬 파이프라인이고,
+  무료 티어 자동 정지 등 운영 리스크만 늘린다.
+- mock 모드 실행도 DB에 기록하되 `mock` 컬럼으로 구분한다. 실데이터 조회 시
+  `WHERE mock = 0` 필터를 잊지 말 것.
 
 ### 외부 API 호출
 - 외부 API 호출은 반드시 `common/http.py`의 재시도/요율제한 헬퍼를 통해서 한다.

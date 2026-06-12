@@ -22,6 +22,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from common.db import get_conn
 from common.http import RateLimiter, request_with_retry
 from common.storage import save_json
 
@@ -207,6 +208,37 @@ def collect(
     }
 
 
+def save_to_db(result: dict) -> int:
+    """급상승 키워드를 trend.db에 이력으로 적재. 같은 날 재실행 시 덮어쓴다."""
+    rows = [
+        (
+            result["collected_at"],
+            cat["category_id"],
+            cat["category_name"],
+            kw["keyword"],
+            kw["prev_week_ratio"],
+            kw["curr_week_ratio"],
+            kw["growth_pct"],
+            1 if result["mock"] else 0,
+        )
+        for cat in result["categories"]
+        for kw in cat["rising_keywords"]
+    ]
+    conn = get_conn()
+    try:
+        with conn:
+            conn.executemany(
+                """INSERT OR REPLACE INTO rising_keywords
+                   (collected_at, category_id, category_name, keyword,
+                    prev_week_ratio, curr_week_ratio, growth_pct, mock)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                rows,
+            )
+    finally:
+        conn.close()
+    return len(rows)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="데이터랩 급상승 키워드 수집")
     parser.add_argument("--mock", action="store_true", help="API 키 없이 mock 데이터 사용")
@@ -239,6 +271,7 @@ def main() -> None:
     )
 
     out = save_json(f"datalab/rising_keywords_{date.today().isoformat()}.json", result)
+    db_rows = save_to_db(result)
 
     total = sum(len(c["rising_keywords"]) for c in result["categories"])
     print(f"\n급상승 키워드 {total}개 ({'mock' if use_mock else 'live'} 모드)")
@@ -250,6 +283,7 @@ def main() -> None:
                 f"{kw['curr_week_ratio']} (+{kw['growth_pct']}%)"
             )
     print(f"\n저장: {out}")
+    print(f"DB 적재: rising_keywords {db_rows}행 (data/trend.db)")
 
 
 if __name__ == "__main__":
